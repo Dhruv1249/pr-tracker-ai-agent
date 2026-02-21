@@ -1,6 +1,6 @@
-const { GoogleGenAI } = require("google-genai");
+import { GoogleGenAI } from "@google/genai";
 // The client gets the API key from the environment variable `GEMINI_API_KEY`.
-const ai = new GoogleGenAI({});
+const ai = new GoogleGenAI({apiK: process.env.GEMINI_API_KEY});
 
 
 const chat = async (content) => {
@@ -12,4 +12,4 @@ const chat = async (content) => {
   return response.text;
 }
 
-module.exports = chat;
+export default chat;

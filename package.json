@@ -4,7 +4,7 @@
   "description": "AI agent for pr-tracker mern project",
   "license": "ISC",
   "author": "Dhruv",
-  "type": "commonjs",
+  "type": "module",
   "main": "index.js",
   "scripts": {
     "dev": "nodemon index.js"

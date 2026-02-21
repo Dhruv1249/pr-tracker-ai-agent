@@ -1,12 +1,12 @@
-require('dotenv').config();
-const cors = require('cors');
-const express = require('express');
-const aiRoutes = require('./routes/ai.route');
-const riskRoutes = require('./routes/risk.route');
-const securityRoutes = require('./routes/security.route');
-
+import "dotenv/config";
+import express from "express";
+import cors from "cors";
+import aiRoutes from "./routes/ai.route.js";
+import riskRoutes from "./routes/risk.route.js";
+import securityRoutes from "./routes/security.route.js";
 
 const app = express();
+
 
 app.use(cors());
 app.use(aiRoutes);
@@ -14,7 +14,8 @@ app.use(riskRoutes);
 app.use(securityRoutes);
 
 
-Port = process.env.PORT || 5001;
+const Port = process.env.PORT || 5001;
+
 app.listen(Port, () => {
   console.log(`Server is running on port ${Port}`);
 });
