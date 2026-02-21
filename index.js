@@ -7,8 +7,10 @@ import securityRoutes from "./routes/security.route.js";
 
 const app = express();
 
+app.use(express.json());
 
-app.use(cors());
+
+app.use(cors({ origin: process.env.PROXY_URL, credentials: true }));
 app.use(aiRoutes);
 app.use(riskRoutes);
 app.use(securityRoutes);
