@@ -1,14 +1,18 @@
-import chat from "../ai/chat.js";
+import { generateReview } from "../ai/mistral.js";
 
 const aiController = {
-    chat: async (req, res) => {
+    review: async (req, res) => {
         const { content } = req.body;
-        if (!content) return res.status(400).json({ error: "Content is required" });
+        if (!content) return res.status(400).json({ error: "Content (diff) is required" });
 
-        const response = await chat(content);
-        res.json({ message: response });
+        try {
+            const response = await generateReview(content);
+            res.json({ message: response });
+        } catch (error) {
+            console.error("Error generating review:", error);
+            res.status(500).json({ error: "Failed to generate review" });
+        }
     },
 };
  
 export default aiController;
-
