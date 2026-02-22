@@ -2,7 +2,7 @@ import { Mistral } from '@mistralai/mistralai';
 
 const apiKey = process.env.MISTRAL_API_KEY;
 const client = new Mistral({ apiKey });
-const model = 'mistral-small-latest';
+const model = 'devstral-2512';
 
 export const generateReview = async (diff) => {
     const prompt = `You are an expert code reviewer. Analyze the following pull request diff and provide a constructive, concise review. Focus on code quality, potential bugs, and best practices.
@@ -144,6 +144,20 @@ export const agentChat = async (query, context = {}) => {
         {
             type: "function",
             function: {
+                name: "sync_repo",
+                description: "Syncs a tracked repository to fetch the latest pull requests (including closed ones) from GitHub into the system.",
+                parameters: {
+                    type: "object",
+                    properties: {
+                        repoId: { type: "string", description: "The internal ID of the repository" }
+                    },
+                    required: ["repoId"]
+                }
+            }
+        },
+        {
+            type: "function",
+            function: {
                 name: "list_tracked_repos",
                 description: "List all repositories currently tracked in the PR Tracker system",
                 parameters: {
@@ -209,11 +223,33 @@ export const agentChat = async (query, context = {}) => {
                     required: ["prId"]
                 }
             }
+        },
+        {
+            type: "function",
+            function: {
+                name: "check_conflicts",
+                description: "Check if a pull request has merge conflicts",
+                parameters: {
+                    type: "object",
+                    properties: {
+                        prId: { type: "string", description: "The internal ID of the pull request" }
+                    },
+                    required: ["prId"]
+                }
+            }
         }
     ];
 
+    const systemPromptMessage = `You are a highly capable autonomous AI agent managing Github Pull Requests for a user.
+You HAVE direct access to GitHub through your provided tools. NEVER say you cannot access or manipulate GitHub repositories directly.
+If the user asks you to perform an action that you have a tool for (like merging, closing, reopening, checking conflicts), you MUST use that tool.
+If the user asks you to perform an action you DO NOT have a tool for (like automatically resolving git conflicts), tell them you cannot resolve it automatically.
+HOWEVER, if you detect a merge conflict (e.g. via 'check_conflicts' returning mergeable: false), you MUST immediately use the 'get_pr_diff' tool to analyze the Pull Request's code changes. You must then explain exactly which files and changes are likely causing the conflict, and provide the user with step-by-step terminal commands (like git pull, git checkout, git merge) on how they can fix the conflict locally.
+IMPORTANT: The 'repoId' required for 'list_prs_for_repo' and 'sync_repo' is the INTERNAL 'repoId' found by calling 'list_tracked_repos'. DO NOT pass GitHub names like "Dhruv1249/expense-server" as a repoId. Use the correct internal id (e.g. "a54b...").
+Current context: ${JSON.stringify(context)}`;
+
     const messages = [
-        { role: 'system', content: `You are an autonomous AI agent managing Github Pull Requests. You can interact with PRs through provided tools. Current context: ${JSON.stringify(context)}` },
+        { role: 'system', content: systemPromptMessage },
         { role: 'user', content: query }
     ];
 
@@ -258,6 +294,9 @@ export const agentChat = async (query, context = {}) => {
                 } else if (functionName === "list_tracked_repos") {
                     url = `${backendBaseUrl}/api/repos/tracked`;
                     method = "GET";
+                } else if (functionName === "sync_repo") {
+                    url = `${backendBaseUrl}/api/repos/${functionArgs.repoId}/sync`;
+                    method = "POST";
                 } else if (functionName === "track_repo") {
                     url = `${backendBaseUrl}/api/repos/track`;
                     body = { owner: functionArgs.owner, name: functionArgs.name };
@@ -266,6 +305,9 @@ export const agentChat = async (query, context = {}) => {
                     method = "GET";
                 } else if (functionName === "get_pr_details") {
                     url = `${backendBaseUrl}/api/prs/${functionArgs.prId}`;
+                    method = "GET";
+                } else if (functionName === "check_conflicts") {
+                    url = `${backendBaseUrl}/api/prs/${functionArgs.prId}/conflicts`;
                     method = "GET";
                 } else if (functionName === "get_pr_diff") {
                     url = `${backendBaseUrl}/api/prs/${functionArgs.prId}/diff`;
