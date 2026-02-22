@@ -94,6 +94,36 @@
 				}
 			},
 			"response": []
+		},
+		{
+			"name": "Interact with AI Agent",
+			"request": {
+				"method": "POST",
+				"header": [
+					{
+						"key": "Content-Type",
+						"value": "application/json"
+					}
+				],
+				"body": {
+					"mode": "raw",
+					"raw": "{\n    \"query\": \"Can you close PR with ID 12345?\",\n    \"context\": { \"repo\": \"my-project\" }\n}"
+				},
+				"url": {
+					"raw": "http://localhost:5001/api/ai/agent",
+					"protocol": "http",
+					"host": [
+						"localhost"
+					],
+					"port": "5001",
+					"path": [
+						"api",
+						"ai",
+						"agent"
+					]
+				}
+			},
+			"response": []
 		}
 	]
 }
