@@ -66,7 +66,7 @@ ${diff}`;
     }
 };
 
-const backendBaseUrl = 'http://localhost:5000'; // Make sure this points to the main backend router or backend service
+const backendBaseUrl = process.env.CORE_SERVICE_URL || 'http://localhost:5005';
 
 export const agentChat = async (query, context = {}) => {
     // Defines tools that correspond to the main backend API
