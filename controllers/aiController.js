@@ -7,12 +7,13 @@ const aiController = {
 
         try {
             const response = await generateReview(content);
-            res.json({ message: response });
+            // response is now a structured JSON object (not a string)
+            res.json({ review: response });
         } catch (error) {
             console.error("Error generating review:", error);
             res.status(500).json({ error: "Failed to generate review" });
         }
     },
 };
- 
+
 export default aiController;

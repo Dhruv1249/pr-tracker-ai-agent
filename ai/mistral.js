@@ -5,17 +5,49 @@ const client = new Mistral({ apiKey });
 const model = 'devstral-2512';
 
 export const generateReview = async (diff) => {
-    const prompt = `You are an expert code reviewer. Analyze the following pull request diff and provide a constructive, concise review. Focus on code quality, potential bugs, and best practices.
+    const prompt = `You are an expert Staff-level software engineer performing a code review.
+Analyze the following pull request diff and return a thorough review as a single valid JSON object.
 
-Diff:
+Return ONLY valid JSON with exactly this schema — no markdown, no extra text:
+{
+  "summary": "A 2-4 sentence explanation of what this PR does.",
+  "bugs": [
+    { "title": "Short title of the issue", "detail": "Full explanation of the bug or edge case." }
+  ],
+  "codeQuality": [
+    { "title": "Short title", "detail": "Full explanation of the quality issue or suggestion." }
+  ],
+  "performance": [
+    { "title": "Short title", "detail": "Full explanation of the performance or security concern." }
+  ],
+  "inlineFeedback": [
+    { "file": "filename or empty string", "code": "relevant code snippet", "suggestion": "What to change and why." }
+  ]
+}
+
+Rules:
+- Each array can have 0 or more items. Use an empty array [] if nothing is found.
+- Keep "title" fields short (under 8 words).
+- Keep "detail" and "suggestion" fields thorough and specific.
+- For "inlineFeedback", quote real code from the diff in "code".
+- Do NOT wrap the JSON in markdown code fences.
+
+Diff to analyze:
 ${diff}`;
 
     const chatResponse = await client.chat.complete({
         model: model,
         messages: [{ role: 'user', content: prompt }],
+        responseFormat: { type: "json_object" },
     });
 
-    return chatResponse.choices[0].message.content;
+    try {
+        return JSON.parse(chatResponse.choices[0].message.content);
+    } catch (e) {
+        // Fallback: return a minimal valid object
+        return { summary: chatResponse.choices[0].message.content, bugs: [], codeQuality: [], performance: [], inlineFeedback: [] };
+    }
+
 };
 
 export const assessRisk = async (diff) => {
@@ -272,7 +304,7 @@ Current context: ${JSON.stringify(context)}`;
         for (const toolCall of toolCalls) {
             const functionName = toolCall.function.name;
             const functionArgs = JSON.parse(toolCall.function.arguments);
-            
+
             let result = "";
             let url = "";
             let method = "POST";
