@@ -100,7 +100,7 @@ ${diff}`;
 
 const backendBaseUrl = process.env.CORE_SERVICE_URL || 'http://localhost:5005';
 
-export const agentChat = async (query, context = {}) => {
+export const agentChat = async (query, context = {}, authHeader) => {
     // Defines tools that correspond to the main backend API
     const tools = [
         {
@@ -349,7 +349,10 @@ Current context: ${JSON.stringify(context)}`;
                 if (url) {
                     const fetchConfig = {
                         method,
-                        headers: { "Content-Type": "application/json" }
+                        headers: { 
+                            "Content-Type": "application/json",
+                            "Authorization": authHeader || ""
+                        }
                     };
                     if (body) {
                         fetchConfig.body = JSON.stringify(body);
